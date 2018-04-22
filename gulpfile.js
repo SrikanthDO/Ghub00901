@@ -4,6 +4,7 @@ var concat = require("gulp-concat");
 var uglify = require("gulp-uglify");
 var cssconcat =  require("gulp-concat-css");
 var cleanCSS = require('gulp-clean-css');
+var connect = require('gulp-connect');
 var vendorBaseScripts = ["../../../assets/inspinia/js/jquery/jquery-2.1.1.min.js",
  "../../../assets/inspinia/js/plugins/jquery-ui/jquery-ui.js",
  "../../../assets/inspinia/js/bootstrap/bootstrap.min.js",
@@ -55,14 +56,16 @@ var vendorBaseScripts2 = [ "../../../assets/inspinia/js/angular/angular.min.js"]
  "../../../assets/inspinia/js/angular/angular-bind-html-compile.js",
  "../../../assets/inspinia/js/plugins/datepicker/angular-datepicker.js",
  "../../../assets/js/angular-file-upload.js"]
-
+var _scripts = ["config/inspinia.js",'config/app.js'
+	,'config/config.js'
+	 ,'config/directives.js'
+	 ,'config/controllers.js'];
+ var _htmlSrc = ['**/*.html'];
+ 
 // SOURCES CONFIG
 var source = {
 	scripts: {
-		app: ["config/inspinia.js",'config/app.js'
-    		,'config/config.js'
-    		 ,'config/directives.js'
-    		 ,'config/controllers.js'],
+		app: _scripts,
     	vendor:vendorBaseScripts,
 		vendor1: vendorBaseScripts1,
 		vendor2: vendorBaseScripts2,
@@ -121,7 +124,8 @@ var build = {
 gulp.task('scripts:app', function () {
 	gulp.src(source.scripts.app) // path to your files
     .pipe(concat(build.scripts.app.main))
-    .pipe(gulp.dest(build.scripts.app.dir));
+    .pipe(gulp.dest(build.scripts.app.dir))
+    .pipe(connect.reload());
 });
 
 gulp.task('scripts:vendor', function () {
@@ -155,7 +159,7 @@ gulp.task('scripts:vendor4', function () {
 	gulp.src(source.scripts.vendor4) // path to your files
     .pipe(concat(build.scripts.vendor4.main))
      .pipe(uglify(build.scripts.vendor4.main))
-    .pipe(gulp.dest(build.scripts.vendor.dir));
+    .pipe(gulp.dest(build.scripts.vendor.dir))
 });
 
 
@@ -163,17 +167,34 @@ gulp.task('styles:vendor', function () {
 	gulp.src(source.styles.app.css) // path to your files
     .pipe(cssconcat(build.styles.main))
    // .pipe(cleanCSS(build.styles.main))
-    .pipe(gulp.dest(build.styles.dir));
+    .pipe(gulp.dest(build.styles.dir))
+    .pipe(connect.reload());
 });
 
 gulp.task('prod:scripts:app', function () {
 	gulp.src(source.scripts.app) // path to your files
     .pipe(concat(build.scripts.app.main))
-    .pipe(gulp.dest(build.scripts.app.dir));
+    .pipe(gulp.dest(build.scripts.app.dir))
+    .pipe(connect.reload());
 });
+gulp.task('html', function() {
+	  gulp.src(_htmlSrc)
+	  .pipe(connect.reload())
+	});
+gulp.task('watch', function() {
+	  gulp.watch(_scripts, ['js']);
+	  gulp.watch(_htmlSrc, ['html']);
+	});
+
+	gulp.task('connect', function() {
+	  connect.server({
+		root: '.',
+		port: 3200,
+	    livereload: true
+	  })
+	});
 //,'scripts:vendor2','scripts:vendor22','scripts:vendor3','scripts:vendor4','scripts:vendor5','scripts:vendor6',
 
-gulp.task('build', ['styles:vendor','scripts:vendor','scripts:app']);
-gulp.task('build-all', ['styles:vendor','scripts:vendor1','scripts:vendor2','scripts:vendor3','scripts:vendor4','scripts:app']);
+gulp.task('build', ['styles:vendor','scripts:vendor','scripts:app','connect', 'watch']);
+gulp.task('default', ['styles:vendor','scripts:vendor1','scripts:vendor2','scripts:vendor3','scripts:vendor4','scripts:app','connect', 'watch']);
 gulp.task('prod-build', [ 'prod:scripts:app']);
-
